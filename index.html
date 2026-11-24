@@ -394,7 +394,7 @@
     <div class="header-content max-w-2xl mx-auto px-3 sm:px-4 py-2">
       <div class="flex items-center gap-2 whitespace-nowrap">
         <span class="w-2 h-2 rounded-full bg-gold-500 animate-pulse shrink-0"></span>
-        <span class="font-script text-xl sm:text-2xl text-maroon-800 leading-none">Manish &amp; Archana</span>
+        <span class="font-script text-xl sm:text-2xl text-maroon-800 leading-none">MANISH &amp; ARCHANA</span>
       </div>
 
       <div class="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
@@ -598,13 +598,13 @@
               <div class="w-24 h-28 sm:w-28 sm:h-32 rounded-full overflow-hidden cameo-frame bg-blush-100 mb-2.5">
                 <img
                   id="groom-cameo-photo"
-                  src="thegroom.png"
+                  src="thegroom.jpeg"
                   alt="Groom CA Manish"
                   data-fallback="groom"
                   class="couple-photo-target w-full h-full groom-cameo-img"
                 />
               </div>
-              <span class="text-[11px] uppercase tracking-[0.2em] text-gold-700 font-bold">The Groom</span>
+              <span class="text-[11px] uppercase tracking-[0.2em] text-gold-700 font-bold">THE GROOM</span>
               <h3 class="font-script text-4xl sm:text-5xl gold-foil-text py-0.5 leading-tight">
                 CA Manish
               </h3>
@@ -624,13 +624,13 @@
               <div class="w-24 h-28 sm:w-28 sm:h-32 rounded-full overflow-hidden cameo-frame bg-blush-100 mb-2.5">
                 <img
                   id="bride-cameo-photo"
-                  src="thebride.png"
+                  src="thebride.jpeg"
                   alt="Bride Dr. Archana"
                   data-fallback="bride"
                   class="couple-photo-target w-full h-full bride-cameo-img"
                 />
               </div>
-              <span class="text-[11px] uppercase tracking-[0.2em] text-gold-700 font-bold">The Bride</span>
+              <span class="text-[11px] uppercase tracking-[0.2em] text-gold-700 font-bold">THE BRIDE</span>
               <h3 class="font-script text-4xl sm:text-5xl gold-foil-text py-0.5 leading-tight">
                 Dr. Archana
               </h3>
@@ -1091,51 +1091,10 @@
       }
 
       /* -------------------------------------------------------
-       * 3. Web Audio API Gentle Indian Classical Sitar/Chime Synth
+       * 3. Background Song (song.mp3)
        * ------------------------------------------------------- */
-      let audioCtx = null;
       let isPlaying = false;
-      let chimeInterval = null;
-
-      // Raga Yaman / Kalyan auspicious pentatonic notes (Hz)
-      const ragaNotes = [261.63, 293.66, 329.63, 369.99, 392.0, 440.0, 493.88, 523.25];
-      let noteStep = 0;
-
-      function playPluckNote(freq) {
-        if (!audioCtx) return;
-        try {
-          const now = audioCtx.currentTime;
-          const osc = audioCtx.createOscillator();
-          const subOsc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now);
-
-          subOsc.type = 'sine';
-          subOsc.frequency.setValueAtTime(freq * 2, now);
-
-          const subGain = audioCtx.createGain();
-          subGain.gain.setValueAtTime(0.035, now);
-          subGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
-
-          gain.gain.setValueAtTime(0.001, now);
-          gain.gain.linearRampToValueAtTime(0.08, now + 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
-
-          osc.connect(gain);
-          subOsc.connect(subGain);
-          subGain.connect(gain);
-          gain.connect(audioCtx.destination);
-
-          osc.start(now);
-          subOsc.start(now);
-          osc.stop(now + 2.5);
-          subOsc.stop(now + 2.5);
-        } catch (e) {
-          // Ignore audio context restrictions if not interacted
-        }
-      }
+      let backgroundAudio = null;
 
       function updateMusicUI() {
         const iconOff = document.getElementById('music-icon-off');
@@ -1144,36 +1103,29 @@
         if (isPlaying) {
           iconOff.classList.add('hidden');
           iconOn.classList.remove('hidden');
-          label.textContent = 'Chime On';
+          label.textContent = 'Song On';
         } else {
           iconOff.classList.remove('hidden');
           iconOn.classList.add('hidden');
-          label.textContent = 'Chime Off';
+          label.textContent = 'Song Off';
         }
       }
 
       function startMusic() {
         try {
-          if (!audioCtx) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContextClass();
-          }
-          if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+          if (!backgroundAudio) {
+            backgroundAudio = new Audio('song.mp3');
+            backgroundAudio.loop = true;
+            backgroundAudio.volume = 0.55;
           }
           if (isPlaying) return;
-          isPlaying = true;
-          updateMusicUI();
-
-          const pattern = [0, 2, 4, 7, 6, 4, 2, 1, 0, 4, 5, 7];
-          playPluckNote(ragaNotes[pattern[noteStep % pattern.length]]);
-          noteStep++;
-
-          chimeInterval = setInterval(() => {
-            if (!isPlaying) return;
-            playPluckNote(ragaNotes[pattern[noteStep % pattern.length]]);
-            noteStep++;
-          }, 1350);
+          backgroundAudio.play().then(() => {
+            isPlaying = true;
+            updateMusicUI();
+          }).catch(() => {
+            isPlaying = false;
+            updateMusicUI();
+          });
         } catch (e) {
           isPlaying = false;
           updateMusicUI();
@@ -1182,9 +1134,8 @@
 
       function stopMusic() {
         isPlaying = false;
-        if (chimeInterval) {
-          clearInterval(chimeInterval);
-          chimeInterval = null;
+        if (backgroundAudio) {
+          backgroundAudio.pause();
         }
         updateMusicUI();
       }
@@ -1192,10 +1143,10 @@
       document.getElementById('music-toggle-btn').addEventListener('click', () => {
         if (isPlaying) {
           stopMusic();
-          showToast('Background chime muted');
+          showToast('Background song muted');
         } else {
           startMusic();
-          showToast('Playing auspicious wedding chime');
+          showToast('Playing background wedding song');
         }
       });
 
@@ -1257,7 +1208,7 @@
           const el = document.createElement('div');
           el.className = 'petal';
           const size = 8 + Math.random() * 10;
-          el.style.left = Math.random() * 100 + 'vw';
+                   el.style.left = Math.random() * 100 + 'vw';
           el.style.width = size + 'px';
           el.style.height = size + 'px';
           el.style.animationDuration = 10 + Math.random() * 12 + 's';
@@ -1512,7 +1463,6 @@
               </p>
             </div>
           `
-          )
           .join('');
       }
 
